@@ -19,13 +19,6 @@ jobs:
           flutter-version: '3.47.2'
           channel: stable
           cache: true
-      - name: Install Android NDK
-        shell: bash
-        run: |
-          SDKMANAGER="$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}" -type f -name sdkmanager | head -n 1)"
-          test -n "$SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "ndk;30.0.16248370"
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze

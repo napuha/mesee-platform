@@ -15,10 +15,8 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.mesee.app"
     compileSdk = flutter.compileSdkVersion
-    // Use the NDK version installed in the release build environment. The
-    // Flutter template's default currently points at 28.2, which triggers a
-    // broken sdkmanager auto-download on this Windows toolchain.
-    ndkVersion = "30.0.16248370"
+    // Keep the NDK version aligned with the Flutter SDK used by CI and local builds.
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
