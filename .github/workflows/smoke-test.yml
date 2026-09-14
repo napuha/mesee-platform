@@ -1,0 +1,17 @@
+name: MeSee smoke test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  smoke-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run MeSee smoke test
+        shell: pwsh
+        run: .\tools\smoke-test.ps1

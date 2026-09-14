@@ -1,0 +1,5 @@
+# Copy this file to android/key.properties locally. Never commit the real file.
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=mesee
+storeFile=C:/secure/path/mesee-upload.jks
