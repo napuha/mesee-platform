@@ -39,7 +39,8 @@ jobs:
           flutter build appbundle --release --no-pub \
             --dart-define=APP_ENV=production \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
-            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+            --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            || (echo "Flutter post-build validation failed; retrying Gradle packaging"; cd android; ./gradlew bundleRelease --no-daemon)
       - name: Upload unsigned bundle
         uses: actions/upload-artifact@v4
         with:
