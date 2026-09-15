@@ -14,7 +14,7 @@
 - [x] Supabaseへ `001`〜`019` を順番に適用（`supabase db push`で最新確認済み）
 - [x] Flutter SDKのロックを解消し、Dart解析・Flutterテスト・Debug APKビルドを実行（実機接続テストは別途）
 - [ ] Authのメール・OAuth・年齢方針を設定
-- [ ] Storageバケットと動画の公開/署名URLを設定（現在のリンク先DBでは`mesee-media`バケット行を確認できていないため、作成後にRLS・署名URLを実機確認する）
+- [x] Storageバケットと動画の公開/署名URLを設定（`mesee-media`を非公開で作成し、本人フォルダ限定のRLSポリシー4件を確認。署名URLの実機確認は別途）
 - [ ] 動画変換・サムネイル・ストリーミングを設定
 - [ ] RealtimeでメッセージとLIVEコメントを実環境確認（メッセージとLIVEコメントのDB・購読・送信UIは実装済み、実際の配信transportは未実装）
 - [ ] Push通知の証明書・Firebase設定を登録
