@@ -11,6 +11,7 @@ on:
 jobs:
   release-validation:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
