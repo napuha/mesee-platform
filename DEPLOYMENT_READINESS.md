@@ -11,7 +11,7 @@
 
 ## 公開前に必ず実環境で確認する項目
 
-- [ ] Supabaseへ `001`〜`019` を順番に適用
+- [x] Supabaseへ `001`〜`019` を順番に適用（`supabase db push`で最新確認済み）
 - [x] Flutter SDKのロックを解消し、Dart解析・Flutterテスト・Debug APKビルドを実行（実機接続テストは別途）
 - [ ] Authのメール・OAuth・年齢方針を設定
 - [ ] Storageバケットと動画の公開/署名URLを設定
