@@ -35,11 +35,11 @@ jobs:
         run: |
           test -n "$SUPABASE_URL"
           test -n "$SUPABASE_ANON_KEY"
-          timeout 8m flutter build appbundle --release --no-pub \
+          timeout 12m flutter build appbundle --release --no-pub \
             --dart-define=APP_ENV=production \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            || (echo "Flutter post-build validation failed; retrying Gradle packaging"; cd android; timeout 8m ./gradlew bundleRelease --no-daemon)
+            || (echo "Flutter post-build validation failed; retrying Gradle packaging"; cd android; timeout 5m ./gradlew bundleRelease --no-daemon)
       - name: Upload unsigned bundle
         uses: actions/upload-artifact@v4
         with:
