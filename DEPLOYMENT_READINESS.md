@@ -11,7 +11,7 @@
 
 ## 公開前に必ず実環境で確認する項目
 
-- [ ] Supabaseへ `001`〜`013` を順番に適用
+- [ ] Supabaseへ `001`〜`014` を順番に適用
 - [x] Flutter SDKのロックを解消し、Dart解析・Flutterテスト・Debug APKビルドを実行（実機接続テストは別途）
 - [ ] Authのメール・OAuth・年齢方針を設定
 - [ ] Storageバケットと動画の公開/署名URLを設定
@@ -36,7 +36,7 @@
 - [x] Client-side upload size guard (500 MB per file)
 - [x] Network video initialization failure feedback without indefinite loading
 - [x] View-complete event and server-side counters
-- [x] Recommendation RPC using follows, engagement, and freshness
+- [x] Recommendation RPC using follows, engagement, freshness, and per-user view/reaction/skip history
 - [x] Creator center entry point with post, view, like, and estimated-revenue analytics
 - [x] Notification preference read/write for likes, saves, follows, reposts, and messages
 - [x] Report submission requires a non-empty reason and surfaces save failures
