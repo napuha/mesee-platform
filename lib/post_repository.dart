@@ -257,6 +257,20 @@ class PostRepository {
     await Supabase.instance.client.from('messages').insert({'sender_id': userId, 'recipient_id': recipientId, 'body': body.trim()});
   }
 
+  Stream<List<Map<String, dynamic>>> liveComments(String livePostId) {
+    if (!AppConfig.hasSupabaseConfig) return const Stream.empty();
+    return Supabase.instance.client.from('live_comments').stream(primaryKey: ['id']).eq('live_post_id', livePostId).order('created_at', ascending: true);
+  }
+
+  Future<void> sendLiveComment({required String livePostId, required String body}) async {
+    if (!AppConfig.hasSupabaseConfig) throw const AuthException('Supabase接続が必要です。');
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final trimmed = body.trim();
+    if (userId == null) throw const AuthException('ログインが必要です。');
+    if (trimmed.isEmpty || trimmed.length > 500) throw const PostgrestException(message: 'コメントは1〜500文字で入力してください。');
+    await Supabase.instance.client.from('live_comments').insert({'live_post_id': livePostId, 'author_id': userId, 'body': trimmed});
+  }
+
   Future<String?> createTextPost({required String title, required String body, String visibility = 'public'}) async {
     if (!AppConfig.hasSupabaseConfig) return null;
     final userId = Supabase.instance.client.auth.currentUser?.id;
