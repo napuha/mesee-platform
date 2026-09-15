@@ -28,7 +28,7 @@ jobs:
           SDKMANAGER="$(find "${ANDROID_SDK_ROOT:-$ANDROID_HOME}" -type f -name sdkmanager | head -n 1)"
           test -n "$SDKMANAGER"
           yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
-          yes | timeout 8m "$SDKMANAGER" "ndk;28.2.13676358"
+          timeout 8m "$SDKMANAGER" "ndk;28.2.13676358"
       - name: Install dependencies
         run: flutter pub get
       - name: Analyze
