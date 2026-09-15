@@ -162,10 +162,16 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 8),
             const Text('あなたのフィード', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 18),
-            ...posts.map((post) => VideoCard(post: post)),
+            ...posts.map((post) => AppConfig.hasSupabaseConfig ? VideoCard(post: post) : _FallbackVideoCard(post: post)),
           ]);
         },
       );
+}
+class _FallbackVideoCard extends StatelessWidget {
+  const _FallbackVideoCard({required this.post});
+  final PostRecord post;
+  @override
+  Widget build(BuildContext context) => Card(clipBehavior: Clip.antiAlias, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Container(height: 300, decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xff202d50), Color(0xffa63d91)])), child: const Center(child: Icon(Icons.play_circle_outline, size: 64))), Padding(padding: const EdgeInsets.all(14), child: Text('${post.authorHandle}\n${post.caption}\n▶ ${post.viewCount}  ♥ ${post.likeCount}'))]));
 }
 class VideoCard extends StatefulWidget {
   const VideoCard({required this.post, super.key});
