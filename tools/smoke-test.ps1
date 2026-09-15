@@ -12,7 +12,7 @@ foreach ($path in @('pubspec.yaml','lib\main.dart')) {
 }
 $repositoryCode = Get-Content (Join-Path $root 'lib\post_repository.dart') -Raw
 foreach ($method in @('recordImpression','blockUser','fetchUserSettings','updateUserSettings','createLivePost','liveComments','sendLiveComment','fetchCreatorAnalytics','fetchProfileStats','requestAccountDeletion','cancelAccountDeletion')) {
-  if ($repositoryCode -notmatch "Future[^\r\n]*\b$method\b") { throw "Missing repository capability: $method" }
+  if ($repositoryCode -notmatch "(?:Future|Stream)[^\r\n]*\b$method\b") { throw "Missing repository capability: $method" }
 }
 $mainCode = Get-Content (Join-Path $root 'lib\main.dart') -Raw
 if ($mainCode -notmatch '動画を再生できませんでした') { throw 'Missing video playback failure feedback.' }
