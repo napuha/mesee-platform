@@ -8,6 +8,10 @@ on:
     tags:
       - 'v*'
 
+concurrency:
+  group: mesee-release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release-validation:
     runs-on: ubuntu-latest
