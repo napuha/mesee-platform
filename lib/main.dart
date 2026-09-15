@@ -436,9 +436,9 @@ class _NotificationSettingsDialogState extends State<_NotificationSettingsDialog
 }
 class _ThemeDialog extends StatelessWidget {
   const _ThemeDialog();
-  void _set(ThemeMode mode) {
+  Future<void> _set(ThemeMode mode) async {
     appThemeMode.value = mode;
-    const PostRepository().updateTheme(mode == ThemeMode.light ? 'light' : mode == ThemeMode.system ? 'system' : 'dark');
+    await const PostRepository().updateTheme(mode == ThemeMode.light ? 'light' : mode == ThemeMode.system ? 'system' : 'dark');
   }
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<ThemeMode>(
@@ -446,9 +446,9 @@ class _ThemeDialog extends StatelessWidget {
         builder: (_, mode, __) => AlertDialog(
           title: const Text('テーマ設定'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            RadioListTile(value: ThemeMode.light, groupValue: mode, title: const Text('ライト'), onChanged: (value) => _set(value!)),
-            RadioListTile(value: ThemeMode.dark, groupValue: mode, title: const Text('ダーク'), onChanged: (value) => _set(value!)),
-            RadioListTile(value: ThemeMode.system, groupValue: mode, title: const Text('端末設定'), onChanged: (value) => _set(value!)),
+            RadioListTile(value: ThemeMode.light, groupValue: mode, title: const Text('ライト'), onChanged: (value) async { if (value != null) await _set(value); }),
+            RadioListTile(value: ThemeMode.dark, groupValue: mode, title: const Text('ダーク'), onChanged: (value) async { if (value != null) await _set(value); }),
+            RadioListTile(value: ThemeMode.system, groupValue: mode, title: const Text('端末設定'), onChanged: (value) async { if (value != null) await _set(value); }),
           ]),
           actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))],
         ),
