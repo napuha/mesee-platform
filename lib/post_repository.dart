@@ -155,7 +155,14 @@ class PostRepository {
     if (!AppConfig.hasSupabaseConfig) return null;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return null;
-    return Supabase.instance.client.from('user_settings').select('notify_likes,notify_saves,notify_followers,notify_reposts,notify_messages').eq('user_id', userId).maybeSingle();
+    return Supabase.instance.client.from('user_settings').select('notify_likes,notify_saves,notify_followers,notify_reposts,notify_messages,theme').eq('user_id', userId).maybeSingle();
+  }
+
+  Future<void> updateTheme(String theme) async {
+    if (!AppConfig.hasSupabaseConfig) return;
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    await Supabase.instance.client.from('user_settings').upsert({'user_id': userId, 'theme': theme});
   }
 
   Future<void> updateUserSettings(Map<String, bool> values) async {

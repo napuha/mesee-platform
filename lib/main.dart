@@ -371,7 +371,13 @@ class _NotificationsDialog extends StatelessWidget {
 class ProfilePage extends StatefulWidget { const ProfilePage({super.key}); @override State<ProfilePage> createState() => _ProfilePageState(); }
 class _ProfilePageState extends State<ProfilePage> {
   late Future<List<PostRecord>> posts; Map<String, dynamic>? profile, stats; String selected = 'own', sort = 'latest';
-  @override void initState() { super.initState(); _reload(); }
+  @override void initState() { super.initState(); _reload(); _loadTheme(); }
+  Future<void> _loadTheme() async {
+    final settings = await const PostRepository().fetchUserSettings();
+    final theme = settings?['theme'] as String?;
+    if (!mounted || theme == null) return;
+    appThemeMode.value = theme == 'light' ? ThemeMode.light : theme == 'system' ? ThemeMode.system : ThemeMode.dark;
+  }
   Future<List<PostRecord>> _loadPosts() { final popular = sort == 'popular'; return selected == 'own' ? const PostRepository().fetchOwnPosts(popular: popular) : selected == 'vertical_video' ? const PostRepository().fetchOwnPosts(kind: 'vertical_video', popular: popular) : selected == 'horizontal_video' ? const PostRepository().fetchOwnPosts(kind: 'horizontal_video', popular: popular) : selected == 'text' ? const PostRepository().fetchOwnPosts(kind: 'text', popular: popular) : const PostRepository().fetchReactionPosts(selected); }
   void _reload() { posts = _loadPosts(); const PostRepository().fetchCurrentProfile().then((value) { if (mounted) setState(() => profile = value); }); const PostRepository().fetchProfileStats().then((value) { if (mounted) setState(() => stats = value); }); }
   Future<void> _deletePost(PostRecord post) async { final ok = await showDialog<bool>(context: context, builder: (_) => AlertDialog(title: const Text('投稿を削除しますか？'), content: const Text('削除後は公開フィードから表示されなくなります。'), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('キャンセル')), FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('削除'))])); if (ok != true) return; try { await const PostRepository().deleteOwnPost(post.id); if (mounted) { setState(_reload); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('投稿を削除しました'))); } } catch (exception) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('削除に失敗しました: $exception'))); } }
@@ -414,15 +420,19 @@ class _NotificationSettingsDialogState extends State<_NotificationSettingsDialog
 }
 class _ThemeDialog extends StatelessWidget {
   const _ThemeDialog();
+  void _set(ThemeMode mode) {
+    appThemeMode.value = mode;
+    const PostRepository().updateTheme(mode == ThemeMode.light ? 'light' : mode == ThemeMode.system ? 'system' : 'dark');
+  }
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<ThemeMode>(
         valueListenable: appThemeMode,
         builder: (_, mode, __) => AlertDialog(
           title: const Text('テーマ設定'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            RadioListTile(value: ThemeMode.light, groupValue: mode, title: const Text('ライト'), onChanged: (value) => appThemeMode.value = value!),
-            RadioListTile(value: ThemeMode.dark, groupValue: mode, title: const Text('ダーク'), onChanged: (value) => appThemeMode.value = value!),
-            RadioListTile(value: ThemeMode.system, groupValue: mode, title: const Text('端末設定'), onChanged: (value) => appThemeMode.value = value!),
+            RadioListTile(value: ThemeMode.light, groupValue: mode, title: const Text('ライト'), onChanged: (value) => _set(value!)),
+            RadioListTile(value: ThemeMode.dark, groupValue: mode, title: const Text('ダーク'), onChanged: (value) => _set(value!)),
+            RadioListTile(value: ThemeMode.system, groupValue: mode, title: const Text('端末設定'), onChanged: (value) => _set(value!)),
           ]),
           actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))],
         ),
