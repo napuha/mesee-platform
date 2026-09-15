@@ -1,6 +1,7 @@
 // The moderation flow intentionally awaits modal results before showing the next modal.
 // Each resulting action is still guarded by `mounted` before UI feedback.
 // ignore_for_file: use_build_context_synchronously
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'app_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -305,8 +306,18 @@ class MessagesPage extends StatefulWidget {
 }
 class _MessagesPageState extends State<MessagesPage> {
   late Future<List<Map<String, dynamic>>> _messages;
+  StreamSubscription<List<Map<String, dynamic>>>? _messageSubscription;
+  List<Map<String, dynamic>>? _liveMessages;
   @override void initState() { super.initState(); _reload(); }
-  void _reload() { _messages = const PostRepository().fetchMessages(); }
+  void _reload() {
+    _messages = const PostRepository().fetchMessages();
+    if (!AppConfig.hasSupabaseConfig) return;
+    _messageSubscription?.cancel();
+    _messageSubscription = Supabase.instance.client.from('messages').stream(primaryKey: ['id']).order('created_at', ascending: false).limit(50).listen((rows) {
+      if (mounted) setState(() => _liveMessages = rows);
+    });
+  }
+  @override void dispose() { _messageSubscription?.cancel(); super.dispose(); }
   Future<void> _openComposer() async {
     await showDialog<void>(context: context, builder: (_) => const _MessageComposerDialog());
     if (mounted) setState(_reload);
@@ -317,7 +328,7 @@ class _MessagesPageState extends State<MessagesPage> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
           if (snapshot.hasError) return Center(child: Text('メッセージを読み込めませんでした。\n${snapshot.error}'));
-          final messages = snapshot.data ?? const <Map<String, dynamic>>[];
+          final messages = _liveMessages ?? snapshot.data ?? const <Map<String, dynamic>>[];
           final content = messages.isEmpty && AppConfig.hasSupabaseConfig ? const Center(child: Text('メッセージはまだありません')) : messages.isEmpty ? ListView(padding: const EdgeInsets.all(16), children: const [Text('MESSAGES', style: TextStyle(color: Colors.white54, letterSpacing: 2)), ListTile(leading: CircleAvatar(child: Text('MS')), title: Text('@sora.movie'), subtitle: Text('開発用メッセージ'))]) : ListView(padding: const EdgeInsets.all(16), children: [const Text('MESSAGES', style: TextStyle(color: Colors.white54, letterSpacing: 2)), ...messages.map((message) => ListTile(leading: const CircleAvatar(child: Text('M')), title: Text(message['body'] as String? ?? ''), subtitle: Text('${message['created_at'] ?? ''}')))]);
           return Stack(children: [content, if (AppConfig.hasSupabaseConfig) Positioned(right: 18, bottom: 18, child: FloatingActionButton(onPressed: _openComposer, child: const Icon(Icons.edit))) ]);
         },
