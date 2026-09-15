@@ -408,7 +408,6 @@ class _ProfilePageState extends State<ProfilePage> {
     FilledButton(onPressed: () async { await showDialog<void>(context: context, builder: (_) => const _ProfileEditDialog()); if (mounted) setState(_reload); }, child: const Text('プロフィールを編集')),
     OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _ThemeDialog()), icon: const Icon(Icons.palette_outlined), label: const Text('テーマ設定')),
     if (AppConfig.hasSupabaseConfig) OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _CreatorCenterDialog()), icon: const Icon(Icons.insights_outlined), label: const Text('クリエイターセンター')),
-    if (profile?['is_admin'] == true) OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _AdminModerationDialog()), icon: const Icon(Icons.admin_panel_settings_outlined), label: const Text('管理者モデレーション')),
     if (AppConfig.hasSupabaseConfig) OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _NotificationSettingsDialog()), icon: const Icon(Icons.notifications_outlined), label: const Text('通知設定')),
     if (AppConfig.hasSupabaseConfig) OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _AccountDeletionDialog()), icon: const Icon(Icons.delete_forever_outlined), label: const Text('アカウント削除')),
     if (AppConfig.hasSupabaseConfig) OutlinedButton.icon(onPressed: () => Supabase.instance.client.auth.signOut(), icon: const Icon(Icons.logout), label: const Text('ログアウト')),
@@ -419,20 +418,6 @@ class _ProfilePageState extends State<ProfilePage> {
 class _CreatorCenterDialog extends StatelessWidget {
   const _CreatorCenterDialog();
   @override Widget build(BuildContext context) => AlertDialog(title: const Text('クリエイターセンター'), content: FutureBuilder<Map<String, dynamic>?>(future: const PostRepository().fetchCreatorAnalytics(), builder: (context, snapshot) { if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox(height: 80, child: Center(child: CircularProgressIndicator())); final data = snapshot.data; if (data == null) return const Text('分析データを取得できませんでした。'); return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text('投稿数: ${data['total_posts'] ?? 0}'), Text('再生数: ${data['total_views'] ?? 0}'), Text('インプレッション: ${data['total_impressions'] ?? 0}'), Text('いいね: ${data['total_likes'] ?? 0}'), Text('推定収益: ${data['creator_revenue'] ?? 0}'),]); }), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))]);
-}
-class _AdminModerationDialog extends StatefulWidget {
-  const _AdminModerationDialog();
-  @override State<_AdminModerationDialog> createState() => _AdminModerationDialogState();
-}
-class _AdminModerationDialogState extends State<_AdminModerationDialog> {
-  late Future<List<Map<String, dynamic>>> reports;
-  @override void initState() { super.initState(); reports = const PostRepository().fetchAdminReports(); }
-  @override Widget build(BuildContext context) => AlertDialog(title: const Text('管理者モデレーション'), content: SizedBox(width: 420, child: FutureBuilder<List<Map<String, dynamic>>>(future: reports, builder: (context, snapshot) {
-    if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-    final items = snapshot.data ?? const <Map<String, dynamic>>[];
-    if (items.isEmpty) return const Text('未対応の通報はありません。');
-    return ListView(shrinkWrap: true, children: [for (final report in items) ListTile(title: Text('投稿: \${report['post_id'] ?? ''}'), subtitle: Text('\${report['reason'] ?? ''}'), trailing: IconButton(icon: const Icon(Icons.delete_forever_outlined), onPressed: () async { try { await const PostRepository().adminDeletePost(report['post_id'] as String, report['id'] as String); if (mounted) setState(() { reports = const PostRepository().fetchAdminReports(); }); } catch (exception) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('削除に失敗しました: \$exception'))); } }))]);
-  })), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))]);
 }
 class _AccountDeletionDialog extends StatefulWidget { const _AccountDeletionDialog(); @override State<_AccountDeletionDialog> createState() => _AccountDeletionDialogState(); }
 class _AccountDeletionDialogState extends State<_AccountDeletionDialog> {

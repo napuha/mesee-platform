@@ -74,7 +74,7 @@ class PostRepository {
     if (!AppConfig.hasSupabaseConfig) return null;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return null;
-    final profile = await Supabase.instance.client.from('profiles').select('display_name,username,bio,is_private,avatar_url,header_url,is_admin').eq('id', userId).maybeSingle();
+    final profile = await Supabase.instance.client.from('profiles').select('display_name,username,bio,is_private,avatar_url,header_url').eq('id', userId).maybeSingle();
     if (profile == null) return null;
     for (final key in ['avatar_url', 'header_url']) {
       final path = profile[key] as String?;
@@ -228,21 +228,6 @@ class PostRepository {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) throw const AuthException('ログインが必要です。');
     await Supabase.instance.client.from('reports').insert({'reporter_id': userId, 'post_id': postId, 'reason': reason.trim()});
-  }
-
-  Future<List<Map<String, dynamic>>> fetchAdminReports() async {
-    if (!AppConfig.hasSupabaseConfig) return const <Map<String, dynamic>>[];
-    final rows = await Supabase.instance.client.from('reports').select('id,post_id,reason,status,created_at').eq('status', 'open').order('created_at', ascending: false).limit(100);
-    return (rows as List).map((row) => Map<String, dynamic>.from(row as Map)).toList();
-  }
-
-  Future<void> adminDeletePost(String postId, String reportId) async {
-    if (!AppConfig.hasSupabaseConfig) throw const AuthException('Supabase接続が必要です。');
-    final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) throw const AuthException('ログインが必要です。');
-    await Supabase.instance.client.from('posts').update({'status': 'deleted', 'deleted_at': DateTime.now().toUtc().toIso8601String(), 'updated_at': DateTime.now().toUtc().toIso8601String()}).eq('id', postId);
-    await Supabase.instance.client.from('reports').update({'status': 'resolved'}).eq('id', reportId);
-    await Supabase.instance.client.from('admin_actions').insert({'admin_id': userId, 'post_id': postId, 'report_id': reportId, 'action': 'remove_post', 'reason': '管理者による通報対応'});
   }
 
   Future<List<Map<String, dynamic>>> fetchNotifications() async {
