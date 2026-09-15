@@ -16,28 +16,19 @@ Future<void> main() async {
       publishableKey: AppConfig.supabaseAnonKey,
     );
   }
-  runApp(MeSeeApp(key: meSeeAppKey));
+  runApp(const MeSeeApp());
 }
 
-final GlobalKey<_MeSeeAppState> meSeeAppKey = GlobalKey<_MeSeeAppState>();
-
-class MeSeeApp extends StatefulWidget {
+class MeSeeApp extends StatelessWidget {
   const MeSeeApp({super.key});
-  @override State<MeSeeApp> createState() => _MeSeeAppState();
-}
 
-class _MeSeeAppState extends State<MeSeeApp> {
-  ThemeMode mode = ThemeMode.dark;
-  void setTheme(ThemeMode value) => setState(() => mode = value);
   @override
   Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'MeSee ${AppConfig.environment}',
-    themeMode: mode,
-    theme: ThemeData(brightness: Brightness.light, colorSchemeSeed: const Color(0xffec4899), useMaterial3: true),
-    darkTheme: ThemeData(brightness: Brightness.dark, scaffoldBackgroundColor: const Color(0xff08080c), colorSchemeSeed: const Color(0xffec4899), useMaterial3: true),
-    home: AppConfig.isProduction && !AppConfig.hasSupabaseConfig ? const _ProductionConfigErrorPage() : const AuthGate(),
-  );
+        debugShowCheckedModeBanner: false,
+        title: 'MeSee ${AppConfig.environment}',
+        theme: ThemeData(brightness: Brightness.dark, scaffoldBackgroundColor: const Color(0xff08080c), colorSchemeSeed: const Color(0xffec4899), useMaterial3: true),
+        home: AppConfig.isProduction && !AppConfig.hasSupabaseConfig ? const _ProductionConfigErrorPage() : const AuthGate(),
+      );
 }
 
 class _ProductionConfigErrorPage extends StatelessWidget {
@@ -386,7 +377,6 @@ class _ProfilePageState extends State<ProfilePage> {
     ]),
     const SizedBox(height: 20), Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [Text('${stats?['following_count'] ?? 0}\nフォロー中', textAlign: TextAlign.center), Text('${stats?['follower_count'] ?? 0}\nフォロワー', textAlign: TextAlign.center), Text('${stats?['like_count'] ?? 0}\nいいね', textAlign: TextAlign.center)]), const SizedBox(height: 20),
     FilledButton(onPressed: () async { await showDialog<void>(context: context, builder: (_) => const _ProfileEditDialog()); if (mounted) setState(_reload); }, child: const Text('プロフィールを編集')),
-    OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _ThemeDialog()), icon: const Icon(Icons.palette_outlined), label: const Text('テーマ設定')),
     if (AppConfig.hasSupabaseConfig) OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _CreatorCenterDialog()), icon: const Icon(Icons.insights_outlined), label: const Text('クリエイターセンター')),
     if (AppConfig.hasSupabaseConfig) OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _NotificationSettingsDialog()), icon: const Icon(Icons.notifications_outlined), label: const Text('通知設定')),
     if (AppConfig.hasSupabaseConfig) OutlinedButton.icon(onPressed: () => showDialog<void>(context: context, builder: (_) => const _AccountDeletionDialog()), icon: const Icon(Icons.delete_forever_outlined), label: const Text('アカウント削除')),
@@ -413,14 +403,6 @@ class _NotificationSettingsDialogState extends State<_NotificationSettingsDialog
   Future<void> _load() async { try { final data = await const PostRepository().fetchUserSettings(); if (!mounted) return; if (data != null) { for (final key in values.keys) { values[key] = data[key] as bool? ?? true; } } setState(() => busy = false); } catch (_) { if (mounted) { setState(() => busy = false); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('通知設定を読み込めませんでした。'))); } } }
   Future<void> save() async { setState(() => busy = true); try { await const PostRepository().updateUserSettings(values); if (mounted) Navigator.pop(context); } catch (exception) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('通知設定の保存に失敗しました: $exception'))); } finally { if (mounted) setState(() => busy = false); } }
   @override Widget build(BuildContext context) => AlertDialog(title: const Text('通知設定'), content: Column(mainAxisSize: MainAxisSize.min, children: [for (final item in const [('notify_likes', 'いいね'), ('notify_saves', '保存'), ('notify_followers', 'フォロー'), ('notify_reposts', '再投稿'), ('notify_messages', 'メッセージ')]) SwitchListTile(title: Text(item.$2), value: values[item.$1] ?? true, onChanged: busy ? null : (v) => setState(() => values[item.$1] = v))]), actions: [TextButton(onPressed: busy ? null : () => Navigator.pop(context), child: const Text('キャンセル')), FilledButton(onPressed: busy ? null : save, child: Text(busy ? '読み込み中…' : '保存'))]);
-}
-class _ThemeDialog extends StatelessWidget {
-  const _ThemeDialog();
-  @override Widget build(BuildContext context) => AlertDialog(title: const Text('テーマ設定'), content: Column(mainAxisSize: MainAxisSize.min, children: [
-    RadioListTile<ThemeMode>(value: ThemeMode.light, groupValue: meSeeAppKey.currentState?.mode, title: const Text('ライト'), onChanged: (value) { if (value != null) meSeeAppKey.currentState?.setTheme(value); }),
-    RadioListTile<ThemeMode>(value: ThemeMode.dark, groupValue: meSeeAppKey.currentState?.mode, title: const Text('ダーク'), onChanged: (value) { if (value != null) meSeeAppKey.currentState?.setTheme(value); }),
-    RadioListTile<ThemeMode>(value: ThemeMode.system, groupValue: meSeeAppKey.currentState?.mode, title: const Text('端末設定'), onChanged: (value) { if (value != null) meSeeAppKey.currentState?.setTheme(value); }),
-  ]), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('閉じる'))]);
 }
 class _ProfileEditDialog extends StatefulWidget { const _ProfileEditDialog(); @override State<_ProfileEditDialog> createState() => _ProfileEditDialogState(); }
 class _ProfileEditDialogState extends State<_ProfileEditDialog> {
