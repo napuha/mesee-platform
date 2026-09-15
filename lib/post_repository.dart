@@ -74,7 +74,15 @@ class PostRepository {
     if (!AppConfig.hasSupabaseConfig) return null;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return null;
-    return Supabase.instance.client.from('profiles').select('display_name,username,bio,is_private').eq('id', userId).maybeSingle();
+    final profile = await Supabase.instance.client.from('profiles').select('display_name,username,bio,is_private,avatar_url,header_url').eq('id', userId).maybeSingle();
+    if (profile == null) return null;
+    for (final key in ['avatar_url', 'header_url']) {
+      final path = profile[key] as String?;
+      if (path != null && path.isNotEmpty && !path.startsWith('http')) {
+        try { profile[key] = await Supabase.instance.client.storage.from('mesee-media').createSignedUrl(path, 3600); } catch (_) { profile[key] = null; }
+      }
+    }
+    return profile;
   }
 
   Future<List<PostRecord>> fetchOwnPosts({String? kind}) async {
@@ -265,19 +273,30 @@ class PostRepository {
     return row['id'] as String;
   }
 
-  Future<void> updateProfile({required String displayName, required String username, required String bio, bool isPrivate = false}) async {
+  Future<void> updateProfile({required String displayName, required String username, required String bio, bool isPrivate = false, XFile? avatar, XFile? header}) async {
     if (!AppConfig.hasSupabaseConfig) return;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) throw const AuthException('ログインが必要です。');
     final normalized = username.trim().replaceFirst(RegExp(r'^@'), '').toLowerCase();
     if (normalized.isEmpty) throw const PostgrestException(message: 'ユーザーネームを入力してください。');
-    await Supabase.instance.client.from('profiles').update({
+    final updates = <String, dynamic>{
       'display_name': displayName.trim(),
       'username': normalized,
       'bio': bio.trim(),
       'is_private': isPrivate,
       'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }).eq('id', userId);
+    };
+    for (final entry in {'avatar_url': avatar, 'header_url': header}.entries) {
+      final file = entry.value;
+      if (file == null) continue;
+      final mime = file.mimeType ?? '';
+      final isImage = mime.startsWith('image/') || RegExp(r'\.(png|jpe?g|webp|heic)$', caseSensitive: false).hasMatch(file.name);
+      if (!isImage) throw const PostgrestException(message: 'プロフィール画像は画像ファイルを選択してください。');
+      final path = '$userId/profile_${entry.key}_${DateTime.now().microsecondsSinceEpoch}';
+      await Supabase.instance.client.storage.from('mesee-media').uploadBinary(path, await file.readAsBytes(), fileOptions: const FileOptions(upsert: false));
+      updates[entry.key] = path;
+    }
+    await Supabase.instance.client.from('profiles').update(updates).eq('id', userId);
   }
 
   Future<String> createMediaPost({required XFile file, required String kind, required String title, String visibility = 'public'}) async {
