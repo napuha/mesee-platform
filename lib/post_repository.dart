@@ -85,6 +85,12 @@ class PostRepository {
     return profile;
   }
 
+  Future<Map<String, dynamic>?> fetchProfileStats() async {
+    if (!AppConfig.hasSupabaseConfig || Supabase.instance.client.auth.currentUser == null) return null;
+    final result = await Supabase.instance.client.rpc('get_profile_stats');
+    return result is Map ? Map<String, dynamic>.from(result) : null;
+  }
+
   Future<List<PostRecord>> fetchOwnPosts({String? kind}) async {
     if (!AppConfig.hasSupabaseConfig) return const <PostRecord>[];
     final userId = Supabase.instance.client.auth.currentUser?.id;

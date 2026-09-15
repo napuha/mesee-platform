@@ -11,7 +11,7 @@ Check 'Flutter Android platform' (Test-Path (Join-Path $root 'android')) 'Genera
 Check 'Flutter iOS platform' (Test-Path (Join-Path $root 'ios')) 'Generate iOS platform'
 Check 'Camera permissions' ((Get-Content (Join-Path $root 'android\app\src\main\AndroidManifest.xml') -Raw) -match 'android.permission.CAMERA') 'Add Android camera permission'
 Check 'iOS camera usage text' ((Get-Content (Join-Path $root 'ios\Runner\Info.plist') -Raw) -match 'NSCameraUsageDescription') 'Add iOS camera usage text'
-Check 'Supabase migrations 001-014' ((Get-ChildItem (Join-Path $root 'supabase') -Filter '*.sql').Count -ge 14) 'Apply all Supabase migrations'
+Check 'Supabase migrations 001-015' ((Get-ChildItem (Join-Path $root 'supabase') -Filter '*.sql').Count -ge 15) 'Apply all Supabase migrations'
 Check 'Release CI workflow' (Test-Path (Join-Path $root '.github\workflows\flutter-release.yml')) 'Add release CI workflow'
 Check 'Debug APK' (Test-Path (Join-Path $root 'build\app\outputs\flutter-apk\app-debug.apk')) 'Build debug APK'
 Check 'Release AAB' (Test-Path (Join-Path $root 'build\app\outputs\bundle\release\app-release.aab')) 'Build release app bundle'

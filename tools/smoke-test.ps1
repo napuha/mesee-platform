@@ -11,7 +11,7 @@ foreach ($path in @('pubspec.yaml','lib\main.dart')) {
   if (-not (Test-Path (Join-Path $root $path))) { throw "Missing required file: $path" }
 }
 $repositoryCode = Get-Content (Join-Path $root 'lib\post_repository.dart') -Raw
-foreach ($method in @('recordImpression','blockUser','fetchUserSettings','updateUserSettings','createLivePost','fetchCreatorAnalytics','requestAccountDeletion','cancelAccountDeletion')) {
+foreach ($method in @('recordImpression','blockUser','fetchUserSettings','updateUserSettings','createLivePost','fetchCreatorAnalytics','fetchProfileStats','requestAccountDeletion','cancelAccountDeletion')) {
   if ($repositoryCode -notmatch "Future[^\r\n]*\b$method\b") { throw "Missing repository capability: $method" }
 }
 $mainCode = Get-Content (Join-Path $root 'lib\main.dart') -Raw
