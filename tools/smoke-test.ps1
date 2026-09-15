@@ -26,7 +26,7 @@ foreach ($migration in $migrations) {
   if ([int]$Matches[1] -ne $expected) { throw "Migration sequence must start at ${expected}: $($migration.Name)" }
   $expected++
 }
-if ($migrations.Count -lt 16) { throw 'Expected core migrations 001 through 016.' }
+if ($migrations.Count -lt 17) { throw 'Expected core migrations 001 through 017.' }
 
 $requiredSql = @('profiles','posts','post_reactions','follows','notifications','reports','post_view_events','messages','blocked_users','user_settings')
 $sql = ($migrations | Get-Content -Raw) -join "`n"
