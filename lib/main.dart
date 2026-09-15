@@ -141,22 +141,6 @@ class _ShellState extends State<Shell> {
   int tab = 0;
   final pages = const [HomePage(), VerticalPage(), HorizontalPage(), MessagesPage(), ProfilePage()];
   @override
-  void initState() {
-    super.initState();
-    _restoreTheme();
-  }
-  Future<void> _restoreTheme() async {
-    final settings = await const PostRepository().fetchUserSettings();
-    final theme = settings?['theme'] as String?;
-    if (theme == 'light') {
-      appThemeMode.value = ThemeMode.light;
-    } else if (theme == 'system') {
-      appThemeMode.value = ThemeMode.system;
-    } else if (theme == 'dark') {
-      appThemeMode.value = ThemeMode.dark;
-    }
-  }
-  @override
   Widget build(BuildContext context) => Scaffold(
         appBar: tab == 1 ? null : AppBar(title: const Logo(), actions: [IconButton(onPressed: () => showDialog<void>(context: context, builder: (_) => const _NotificationsDialog()), icon: const Icon(Icons.notifications_none)), IconButton(onPressed: () => showModalBottomSheet(context: context, builder: (_) => const CreateSheet()), icon: const Icon(Icons.add_box_outlined))]),
         body: pages[tab],
