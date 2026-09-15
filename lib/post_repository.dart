@@ -325,10 +325,15 @@ class PostRepository {
     final extension = file.name.contains('.') ? file.name.split('.').last.toLowerCase() : 'bin';
     final path = '$userId/${DateTime.now().microsecondsSinceEpoch}.$extension';
     await Supabase.instance.client.storage.from('mesee-media').uploadBinary(path, bytes, fileOptions: FileOptions(upsert: false));
-    final row = await Supabase.instance.client.from('posts').insert({
-      'author_id': userId, 'kind': kind, 'title': title.trim(), 'visibility': visibility,
-      'status': 'ready', 'media_url': path, 'published_at': DateTime.now().toUtc().toIso8601String(),
-    }).select('id').single();
-    return row['id'] as String;
+    try {
+      final row = await Supabase.instance.client.from('posts').insert({
+        'author_id': userId, 'kind': kind, 'title': title.trim(), 'visibility': visibility,
+        'status': 'ready', 'media_url': path, 'published_at': DateTime.now().toUtc().toIso8601String(),
+      }).select('id').single();
+      return row['id'] as String;
+    } catch (_) {
+      try { await Supabase.instance.client.storage.from('mesee-media').remove([path]); } catch (_) { }
+      rethrow;
+    }
   }
 }
