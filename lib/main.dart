@@ -210,7 +210,7 @@ class _ReportDialogState extends State<_ReportDialog> {
 class _VideoPreviewState extends State<VideoPreview> {
   late final VideoPlayerController controller;
   String? error;
-  @override void initState() { super.initState(); controller = VideoPlayerController.networkUrl(Uri.parse(widget.url)); controller.initialize().then((_) { if (mounted) setState(() {}); }).catchError((_) { if (mounted) setState(() => error = '動画を再生できませんでした。'); }); }
+  @override void initState() { super.initState(); controller = VideoPlayerController.networkUrl(Uri.parse(widget.url)); controller.initialize().then((_) { controller.setLooping(true); controller.play(); if (mounted) setState(() {}); }).catchError((_) { if (mounted) setState(() => error = '動画を再生できませんでした。'); }); }
   @override void dispose() { controller.dispose(); super.dispose(); }
   @override Widget build(BuildContext context) => error != null ? Center(child: Text(error!)) : controller.value.isInitialized ? GestureDetector(onTap: () => setState(() => controller.value.isPlaying ? controller.pause() : controller.play()), child: FittedBox(fit: BoxFit.cover, child: SizedBox(width: controller.value.size.width, height: controller.value.size.height, child: VideoPlayer(controller)))) : const Center(child: CircularProgressIndicator());
 }

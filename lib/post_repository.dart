@@ -84,7 +84,7 @@ class PostRepository {
     var query = Supabase.instance.client.from('posts').select('id,author_id,title,body,kind,view_count,like_count,media_url').eq('author_id', userId).neq('status', 'deleted');
     if (kind != null) query = query.eq('kind', kind);
     final rows = await query.order('published_at', ascending: false).limit(60);
-    return (rows as List).map((row) => PostRecord.fromMap(Map<String, dynamic>.from(row as Map))).toList();
+    return _resolveMedia((rows as List).map((row) => PostRecord.fromMap(Map<String, dynamic>.from(row as Map))).toList());
   }
 
   Future<List<PostRecord>> fetchReactionPosts(String reaction) async {
@@ -92,7 +92,21 @@ class PostRepository {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return const <PostRecord>[];
     final rows = await Supabase.instance.client.from('post_reactions').select('posts(id,author_id,title,body,kind,view_count,like_count,media_url)').eq('user_id', userId).eq('reaction', reaction);
-    return (rows as List).where((row) => row['posts'] != null).map((row) => PostRecord.fromMap(Map<String, dynamic>.from(row['posts'] as Map))).toList();
+    final posts = (rows as List).where((row) => row['posts'] != null).map((row) => PostRecord.fromMap(Map<String, dynamic>.from(row['posts'] as Map))).toList();
+    return _resolveMedia(posts);
+  }
+
+  Future<List<PostRecord>> _resolveMedia(List<PostRecord> posts) async {
+    return Future.wait(posts.map((post) async {
+      final path = post.mediaUrl;
+      if (path == null || path.startsWith('http')) return post;
+      try {
+        final signed = await Supabase.instance.client.storage.from('mesee-media').createSignedUrl(path, 3600);
+        return post.copyWith(mediaUrl: signed);
+      } catch (_) {
+        return post.copyWith(mediaUrl: null);
+      }
+    }));
   }
 
   Future<void> recordView(String postId) async {
