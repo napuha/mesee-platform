@@ -212,7 +212,12 @@ class _VideoPreviewState extends State<VideoPreview> {
   String? error;
   @override void initState() { super.initState(); controller = VideoPlayerController.networkUrl(Uri.parse(widget.url)); controller.initialize().then((_) { controller.setLooping(true); controller.play(); if (mounted) setState(() {}); }).catchError((_) { if (mounted) setState(() => error = '動画を再生できませんでした。'); }); }
   @override void dispose() { controller.dispose(); super.dispose(); }
-  @override Widget build(BuildContext context) => error != null ? Center(child: Text(error!)) : controller.value.isInitialized ? GestureDetector(onTap: () => setState(() => controller.value.isPlaying ? controller.pause() : controller.play()), child: FittedBox(fit: BoxFit.cover, child: SizedBox(width: controller.value.size.width, height: controller.value.size.height, child: VideoPlayer(controller)))) : const Center(child: CircularProgressIndicator());
+  @override Widget build(BuildContext context) {
+    if (RegExp(r'\.(png|jpe?g|webp|gif)(\?|$)', caseSensitive: false).hasMatch(widget.url)) {
+      return Image.network(widget.url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image_outlined, size: 64)));
+    }
+    return error != null ? Center(child: Text(error!)) : controller.value.isInitialized ? GestureDetector(onTap: () => setState(() => controller.value.isPlaying ? controller.pause() : controller.play()), child: FittedBox(fit: BoxFit.cover, child: SizedBox(width: controller.value.size.width, height: controller.value.size.height, child: VideoPlayer(controller)))) : const Center(child: CircularProgressIndicator());
+  }
 }
 class VerticalPage extends StatelessWidget {
   const VerticalPage({super.key});
