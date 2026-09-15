@@ -160,7 +160,7 @@ class PostRepository {
     if (!AppConfig.hasSupabaseConfig) return;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) throw const AuthException('ログインが必要です。');
-    await Supabase.instance.client.from('user_settings').update(values).eq('user_id', userId);
+    await Supabase.instance.client.from('user_settings').upsert({...values, 'user_id': userId});
   }
 
   Future<Map<String, dynamic>?> requestAccountDeletion() async {
