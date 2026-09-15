@@ -435,9 +435,34 @@ class CreateSheet extends StatelessWidget {
 class _LiveSetupDialog extends StatefulWidget { const _LiveSetupDialog(); @override State<_LiveSetupDialog> createState() => _LiveSetupDialogState(); }
 class _LiveSetupDialogState extends State<_LiveSetupDialog> {
   final title = TextEditingController(), description = TextEditingController(); String visibility = 'public'; bool busy = false; String? error;
-  Future<void> save() async { if (title.text.trim().isEmpty) { setState(() => error = '配信タイトルを入力してください。'); return; } setState(() { busy = true; error = null; }); try { await const PostRepository().createLivePost(title: title.text, description: description.text, visibility: visibility); if (mounted) { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('LIVE配信設定を保存しました。配信transport接続後に開始できます。'))); } } catch (exception) { if (mounted) setState(() => error = exception.toString()); } finally { if (mounted) setState(() => busy = false); } }
+  Future<void> save() async { if (title.text.trim().isEmpty) { setState(() => error = '配信タイトルを入力してください。'); return; } setState(() { busy = true; error = null; }); try { final liveId = await const PostRepository().createLivePost(title: title.text, description: description.text, visibility: visibility); if (mounted) { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('LIVE配信設定を保存しました。コメント欄を開けます。'))); if (liveId != null) { await showModalBottomSheet<void>(context: context, isScrollControlled: true, builder: (_) => _LiveCommentsSheet(livePostId: liveId, title: title.text.trim())); } } } catch (exception) { if (mounted) setState(() => error = exception.toString()); } finally { if (mounted) setState(() => busy = false); } }
   @override void dispose() { title.dispose(); description.dispose(); super.dispose(); }
   @override Widget build(BuildContext context) => AlertDialog(title: const Text('LIVE配信を設定'), content: Column(mainAxisSize: MainAxisSize.min, children: [TextField(controller: title, decoration: const InputDecoration(labelText: 'タイトル')), TextField(controller: description, maxLines: 3, decoration: const InputDecoration(labelText: '説明文・ハッシュタグ')), DropdownButtonFormField<String>(initialValue: visibility, items: const [DropdownMenuItem(value: 'public', child: Text('公開')), DropdownMenuItem(value: 'followers', child: Text('フォロワーのみ')), DropdownMenuItem(value: 'private', child: Text('非公開'))], onChanged: busy ? null : (value) => setState(() => visibility = value ?? 'public')), if (error != null) Text(error!, style: const TextStyle(color: Colors.redAccent))]), actions: [TextButton(onPressed: busy ? null : () => Navigator.pop(context), child: const Text('キャンセル')), FilledButton(onPressed: busy ? null : save, child: Text(busy ? '保存中…' : '設定を保存'))]);
+}
+
+class _LiveCommentsSheet extends StatefulWidget {
+  const _LiveCommentsSheet({required this.livePostId, required this.title});
+  final String livePostId;
+  final String title;
+  @override State<_LiveCommentsSheet> createState() => _LiveCommentsSheetState();
+}
+
+class _LiveCommentsSheetState extends State<_LiveCommentsSheet> {
+  final controller = TextEditingController();
+  bool sending = false;
+  Future<void> send() async {
+    final body = controller.text.trim();
+    if (body.isEmpty || sending) return;
+    setState(() => sending = true);
+    try {
+      await const PostRepository().sendLiveComment(livePostId: widget.livePostId, body: body);
+      controller.clear();
+    } catch (exception) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('コメントを送信できませんでした: $exception')));
+    } finally { if (mounted) setState(() => sending = false); }
+  }
+  @override void dispose() { controller.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) => SafeArea(child: SizedBox(height: MediaQuery.sizeOf(context).height * .72, child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [Row(children: [Expanded(child: Text(widget.title, style: Theme.of(context).textTheme.titleLarge)), IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close))]), const Divider(), Expanded(child: StreamBuilder<List<Map<String, dynamic>>>(stream: const PostRepository().liveComments(widget.livePostId), builder: (context, snapshot) { final comments = snapshot.data ?? const <Map<String, dynamic>>[]; if (!AppConfig.hasSupabaseConfig) return const Center(child: Text('Supabase接続後にLIVEコメントを利用できます。')); if (comments.isEmpty) return const Center(child: Text('コメントはまだありません')); return ListView.builder(itemCount: comments.length, itemBuilder: (_, index) => ListTile(leading: const CircleAvatar(child: Icon(Icons.person)), title: Text(comments[index]['body'] as String? ?? ''), subtitle: Text(comments[index]['created_at'] as String? ?? ''))); })), TextField(controller: controller, maxLength: 500, textInputAction: TextInputAction.send, onSubmitted: (_) => send(), decoration: InputDecoration(hintText: 'LIVEコメントを入力', suffixIcon: IconButton(onPressed: sending ? null : send, icon: sending ? const CircularProgressIndicator() : const Icon(Icons.send))))]))));
 }
 
 class _MediaPostDialog extends StatefulWidget { const _MediaPostDialog(); @override State<_MediaPostDialog> createState() => _MediaPostDialogState(); }
