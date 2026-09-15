@@ -91,13 +91,15 @@ class PostRepository {
     return result is Map ? Map<String, dynamic>.from(result) : null;
   }
 
-  Future<List<PostRecord>> fetchOwnPosts({String? kind}) async {
+  Future<List<PostRecord>> fetchOwnPosts({String? kind, bool popular = false}) async {
     if (!AppConfig.hasSupabaseConfig) return const <PostRecord>[];
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return const <PostRecord>[];
     var query = Supabase.instance.client.from('posts').select('id,author_id,title,body,kind,view_count,like_count,media_url').eq('author_id', userId).neq('status', 'deleted');
     if (kind != null) query = query.eq('kind', kind);
-    final rows = await query.order('published_at', ascending: false).limit(60);
+    final rows = popular
+        ? await query.order('like_count', ascending: false).order('view_count', ascending: false).order('published_at', ascending: false).limit(60)
+        : await query.order('published_at', ascending: false).limit(60);
     return _resolveMedia((rows as List).map((row) => PostRecord.fromMap(Map<String, dynamic>.from(row as Map))).toList());
   }
 
