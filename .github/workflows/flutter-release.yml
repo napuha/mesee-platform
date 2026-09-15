@@ -32,7 +32,7 @@ jobs:
         run: |
           test -n "$SUPABASE_URL"
           test -n "$SUPABASE_ANON_KEY"
-          flutter build appbundle --release --no-pub \
+          timeout 10m flutter build appbundle --release --no-pub \
             --dart-define=APP_ENV=production \
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
